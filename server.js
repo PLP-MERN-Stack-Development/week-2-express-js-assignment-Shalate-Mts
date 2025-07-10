@@ -45,16 +45,75 @@ app.get('/', (req, res) => {
   res.send('Welcome to the Product API! Go to /api/products to see all products.');
 });
 
-// TODO: Implement the following routes:
 // GET /api/products - Get all products
-// GET /api/products/:id - Get a specific product
-// POST /api/products - Create a new product
-// PUT /api/products/:id - Update a product
-// DELETE /api/products/:id - Delete a product
-
-// Example route implementation for GET /api/products
 app.get('/api/products', (req, res) => {
   res.json(products);
+});
+
+// GET /api/products/:id - Get a specific product
+app.get('/api/products/:id', (req, res) => {
+    const productId = products.find(p => p.id === req.params.id);
+    if (productId) {//return the product if found
+        res.json(productId);
+    } else {//return 404 if product not found
+        res.status(404).json({ message: 'Product not found' });
+    }
+});
+
+// POST /api/products - Create a new product
+app.post('/api/products', (req, res) => {
+    const {name, 
+      description, 
+      price, 
+      category, 
+      
+      inStock} = req.body;
+    //Ensure all required fields are provided
+    if (!name || !description || !price || !category) {
+        return res.status(400).json({ message: 'All fields are required' });
+    }
+    //Create a new product object
+    const newProduct = {
+        id: uuidv4(), // Create a unique ID
+        name,
+        description: description || '',
+        price: Number(price), // Ensure price is a number
+        category: category || 'uncategorized', // Default to 'uncategorized' if not provided
+        inStock: inStock || false // Default to false if not provided
+    };
+    // Add the new product to the products array
+    products.push(newProduct);
+    res.status(201).json(newProduct); // Return the created product with 201 status
+});
+
+// PUT /api/products/:id - Update a product
+app.put('/api/products/:id', (req, res) => {
+  const index = products.findIndex(p => p.id === req.params.id);
+  
+  if (index === -1) {// If product not found, return 404
+    return res.status(404).json({ error: 'Product not found' });
+  }
+
+  const updatedProduct = {// Create new product with updated values
+    ...products[index],
+    ...req.body,
+    id: req.params.id // Prevent ID change
+  };
+
+  products[index] = updatedProduct;
+  res.json(updatedProduct);
+});
+
+// DELETE /api/products/:id - Delete a product
+app.delete('/api/products/:id', (req, res) => {
+  const initialLength = products.length; // Store initial length for comparison
+  products = products.filter(p => p.id !== req.params.id);// Filter products by ID
+  
+  if (products.length === initialLength) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+
+  res.status(204).end(); // No content response
 });
 
 // TODO: Implement custom middleware for:
