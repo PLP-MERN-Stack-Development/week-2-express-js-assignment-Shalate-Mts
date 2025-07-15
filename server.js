@@ -1,16 +1,42 @@
 // server.js - Starter Express server for Week 2 assignment
-
+require('dotenv').config(); // Loads environment variables
+console.log('API Key:', process.env.API_KEY); // Debug line
 // Import required modules
 const express = require('express');
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-
 // Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware setup
 app.use(bodyParser.json());
+
+//Request logger
+const requestLogger = (req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  next(); // Pass control to the next middleware
+};
+app.use(requestLogger);
+
+const authRequest = (req, res, next) => {
+  //Extract credentials from request
+  const apiKey = req.headers['x-api-key']; // Use req.get to access headers
+  
+  // Debug logs (check terminal after request)
+  console.log('------ AUTH DEBUG ------');
+  console.log('Received Key:', apiKey || 'NOT FOUND');
+  console.log('Expected Key:', process.env.API_KEY);
+
+  if (!apiKey) {   //Validate credentials
+    return res.status(401).json({ error: 'API key missing' });
+  }
+
+  if (apiKey !== process.env.API_KEY) { //Compare with stored key
+    return res.status(403).json({ error: 'Invalid API key' });
+  }
+  next(); //Proceed to route handler if authenticated
+};
 
 // Sample in-memory products database
 let products = [
@@ -61,7 +87,7 @@ app.get('/api/products/:id', (req, res) => {
 });
 
 // POST /api/products - Create a new product
-app.post('/api/products', (req, res) => {
+app.post('/api/products', authRequest, (req, res) => {
     const {name, 
       description, 
       price, 
@@ -87,7 +113,7 @@ app.post('/api/products', (req, res) => {
 });
 
 // PUT /api/products/:id - Update a product
-app.put('/api/products/:id', (req, res) => {
+  app.put('/api/products/:id', authRequest, (req, res) => {
   const index = products.findIndex(p => p.id === req.params.id);
   
   if (index === -1) {// If product not found, return 404
@@ -105,7 +131,7 @@ app.put('/api/products/:id', (req, res) => {
 });
 
 // DELETE /api/products/:id - Delete a product
-app.delete('/api/products/:id', (req, res) => {
+app.delete('/api/products/:id', authRequest, (req, res) => {
   const initialLength = products.length; // Store initial length for comparison
   products = products.filter(p => p.id !== req.params.id);// Filter products by ID
   
@@ -116,8 +142,6 @@ app.delete('/api/products/:id', (req, res) => {
   res.status(204).end(); // No content response
 });
 
-// TODO: Implement custom middleware for:
-// - Request logging
 // - Authentication
 // - Error handling
 
