@@ -1,63 +1,69 @@
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=19900441&assignment_repo_type=AssignmentRepo)
-# Express.js RESTful API Assignment
+# Express.js Product API - Assignment 2
 
-This assignment focuses on building a RESTful API using Express.js, implementing proper routing, middleware, and error handling.
+## Project Description
+A RESTful API built with Express.js implementing full CRUD operations for product management, featuring authentication, advanced querying, and comprehensive error handling.
 
-## Assignment Overview
+##File Structure
+.
+├── server.js                     # Main application
+├── .env                          # Environment template
+├── package.json                  # Dependencies
+├── package-lock.json     
+├── README.md                     # This file
+├── Week2-Assignment.md           # Assignment instructions
+└── /postman_tests                # Test files
+    ├── wk2.postman_collection
+    └── test_queries.md           # Example queries
 
-You will:
-1. Set up an Express.js server
-2. Create RESTful API routes for a product resource
-3. Implement custom middleware for logging, authentication, and validation
-4. Add comprehensive error handling
-5. Develop advanced features like filtering, pagination, and search
+## Features
+- **CRUD Operations**: Create, read, update, and delete products
+- **Authentication**: API key protection for write operations
+- **Search & Filter**: `/search?q=term` and `?category=electronics`
+- **Pagination**: `?page=1&limit=5`
+- **Error Handling**: Custom errors for 400, 401, 404 responses
 
-## Getting Started
+## Installation
+1. Clone repository:
+   git clone https://github.com/[your-username]/[repo-name].git
+   cd [repo-name]
 
-1. Accept the GitHub Classroom assignment invitation
-2. Clone your personal repository that was created by GitHub Classroom
-3. Install dependencies:
-   ```
+2. Install dependencies:
    npm install
-   ```
-4. Run the server:
-   ```
-   npm start
-   ```
 
-## Files Included
+3. Configure environment:
+   - cp .env.example .env
+   - Edit .env with your credentials:
+      - API_KEY="your_secret_key_here"
+      - PORT=3000
 
-- `Week2-Assignment.md`: Detailed assignment instructions
-- `server.js`: Starter Express.js server file
-- `.env.example`: Example environment variables file
+4. Start Server:
+   - node server.js
+   - nodemon server.js (to restart programme automatically after  changes made)
+   **Server runs at "http://localhost:3000"
 
-## Requirements
+## API Reference
+1. Base URL: http://localhost:3000/api
+2. Endpoints: 
+   - GET	=> /products	
+         => /products/:id	
+         => /products/search	
+   - POST => /products	
+   - PUT	 => /products/:id	
+   - DELETE	=> /products/:id	
 
-- Node.js (v18 or higher)
-- npm or yarn
-- Postman, Insomnia, or curl for API testing
+## Testing
+1. Manual Testing:
+   - Use provided Postman collection in /tests folder
+   - Test all endpoints with valid/invalid inputs
 
-## API Endpoints
+2. Automated Verification:
+   - curl -I http://localhost:3000/api/products
 
-The API will have the following endpoints:
+## Verification Checklist
+   - All endpoints respond with correct status codes
+   - Authentication blocks unauthorized requests
+   - Search returns relevant results
+   - Error handling provides clear messages
 
-- `GET /api/products`: Get all products
-- `GET /api/products/:id`: Get a specific product
-- `POST /api/products`: Create a new product
-- `PUT /api/products/:id`: Update a product
-- `DELETE /api/products/:id`: Delete a product
-
-## Submission
-
-Your work will be automatically submitted when you push to your GitHub Classroom repository. Make sure to:
-
-1. Complete all the required API endpoints
-2. Implement the middleware and error handling
-3. Document your API in the README.md
-4. Include examples of requests and responses
-
-## Resources
-
-- [Express.js Documentation](https://expressjs.com/)
-- [RESTful API Design Best Practices](https://restfulapi.net/)
-- [HTTP Status Codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status) 
+##License
+This project is part of the PLP Express.js Product API Assignment (Educational Use)

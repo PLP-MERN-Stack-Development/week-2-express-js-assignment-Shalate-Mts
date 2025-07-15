@@ -1,0 +1,47 @@
+{
+	"info": {
+		"_postman_id": "a5244f95-e42d-482b-ae52-a0d174747a54",
+		"name": "Assignment WK2",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "46772299"
+	},
+	"item": [
+		{
+			"name": "PLP wk2",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "x-api-key",
+						"value": "$h@l@te",
+						"description": "API Key for week2",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Premium laptop\",\r\n  \"price\": 2000,\r\n  \"inStock\": false\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/products/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"products",
+						"1"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
