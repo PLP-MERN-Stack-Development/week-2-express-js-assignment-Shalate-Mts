@@ -94,13 +94,45 @@ app.get('/', (req, res) => {
 });
 
 // GET /api/products - Get all products
+// Simple version of the GET /api/products endpoint
 app.get('/api/products', (req, res) => {
-  res.json(products);
+  //Get all products
+  let filteredProducts = [...products]; // Start with a copy of all products
+
+  //Filter by category (if provided)
+  if (req.query.category) {
+    filteredProducts = filteredProducts.filter(
+      product => product.category.toLowerCase() === req.query.category.toLowerCase()
+    );
+  }
+
+  //Search by name (if provided)
+  if (req.query.search) {
+    filteredProducts = filteredProducts.filter(
+      product => product.name.toLowerCase().includes(req.query.search.toLowerCase())
+    );
+  }
+
+  //Switch between pages
+  const page = parseInt(req.query.page) || 1; // Default to page 1
+  const limit = parseInt(req.query.limit) || 10; // Default 10 items per page
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+  //Send the response
+  res.json({
+    success: true,
+    totalProducts: filteredProducts.length,
+    currentPage: page,
+    productsPerPage: limit,
+    products: paginatedProducts
+  });
 });
 
 // GET /api/products/:id - Get a specific product
 app.get('/api/products/:id', (req, res, next) => {
-  const product = products.find(p => p.id === req.params.id);
+   const product = products.find(p => p.id === req.params.id);
   if (!product) return next(new NotFoundError());//error handling if product not found
   res.json(product);
 });
