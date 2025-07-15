@@ -1,6 +1,28 @@
 // server.js - Starter Express server for Week 2 assignment
 require('dotenv').config(); // Loads environment variables
-console.log('API Key:', process.env.API_KEY); // Debug line
+//console.log('API Key:', process.env.API_KEY); // Debug line
+
+// Error classes for better handling
+class NotFoundError extends Error {
+  constructor(message = 'Not found') {
+    super(message);
+    this.statusCode = 404;
+  }
+}
+// Validation middleware
+const validateProduct = (req, res, next) => {
+  const { name, price } = req.body;
+  
+  if (!name?.trim()) {
+    return res.status(400).json({ message: 'Product name is required' });
+  }
+
+  if (!price || isNaN(price)) {
+    return res.status(400).json({ message: 'Valid price (number) is required' });
+  }
+
+  next();
+};
 // Import required modules
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -24,10 +46,10 @@ const authRequest = (req, res, next) => {
   const apiKey = req.headers['x-api-key']; // Use req.get to access headers
   
   // Debug logs (check terminal after request)
-  console.log('------ AUTH DEBUG ------');
+/**  console.log('------ AUTH DEBUG ------');
   console.log('Received Key:', apiKey || 'NOT FOUND');
   console.log('Expected Key:', process.env.API_KEY);
-
+**/
   if (!apiKey) {   //Validate credentials
     return res.status(401).json({ error: 'API key missing' });
   }
@@ -77,58 +99,72 @@ app.get('/api/products', (req, res) => {
 });
 
 // GET /api/products/:id - Get a specific product
-app.get('/api/products/:id', (req, res) => {
-    const productId = products.find(p => p.id === req.params.id);
-    if (productId) {//return the product if found
-        res.json(productId);
-    } else {//return 404 if product not found
-        res.status(404).json({ message: 'Product not found' });
-    }
+app.get('/api/products/:id', (req, res, next) => {
+  const product = products.find(p => p.id === req.params.id);
+  if (!product) return next(new NotFoundError());//error handling if product not found
+  res.json(product);
 });
 
 // POST /api/products - Create a new product
-app.post('/api/products', authRequest, (req, res) => {
-    const {name, 
-      description, 
-      price, 
-      category, 
-      
-      inStock} = req.body;
-    //Ensure all required fields are provided
-    if (!name || !description || !price || !category) {
-        return res.status(400).json({ message: 'All fields are required' });
+app.post('/api/products', 
+  authRequest,       // Authorise use
+  validateProduct,   // Then validation
+  (req, res) => {
+    try {
+      const { name, description, price, category, inStock } = req.body;
+
+      const newProduct = {
+        id: uuidv4(),
+        name: name.trim(),
+        description: description?.trim() || '',
+        price: Number(price),
+        category: category?.trim() || 'uncategorized',
+        inStock: Boolean(inStock)
+      };
+
+      products.push(newProduct);
+      res.status(201).json(newProduct);
+
+    } catch (err) {
+      next(err); // Check error handling middleware
     }
-    //Create a new product object
-    const newProduct = {
-        id: uuidv4(), // Create a unique ID
-        name,
-        description: description || '',
-        price: Number(price), // Ensure price is a number
-        category: category || 'uncategorized', // Default to 'uncategorized' if not provided
-        inStock: inStock || false // Default to false if not provided
-    };
-    // Add the new product to the products array
-    products.push(newProduct);
-    res.status(201).json(newProduct); // Return the created product with 201 status
-});
+  }
+);
 
 // PUT /api/products/:id - Update a product
-  app.put('/api/products/:id', authRequest, (req, res) => {
-  const index = products.findIndex(p => p.id === req.params.id);
-  
-  if (index === -1) {// If product not found, return 404
-    return res.status(404).json({ error: 'Product not found' });
+app.put('/api/products/:id', 
+  authRequest,        // Authentication first
+  validateProduct,    
+  (req, res, next) => {
+    try {
+      const productId = req.params.id;
+      const index = products.findIndex(p => p.id === productId);
+
+      if (index === -1) {
+        throw new NotFoundError('Product not found'); // Custom error
+      }
+
+      const updatedProduct = {
+        ...products[index],
+        ...req.body,
+        // Ensure critical fields aren't accidentally overwritten
+        id: productId,
+        price: Number(req.body.price) || products[index].price
+      };
+
+      // Validate category exists if provided
+      if (req.body.category && !req.body.category.trim()) {
+        throw new ValidationError('Category cannot be empty');
+      }
+
+      products[index] = updatedProduct;
+      res.json(updatedProduct);
+
+    } catch (err) {
+      next(err); // Pass to global error handler
+    }
   }
-
-  const updatedProduct = {// Create new product with updated values
-    ...products[index],
-    ...req.body,
-    id: req.params.id // Prevent ID change
-  };
-
-  products[index] = updatedProduct;
-  res.json(updatedProduct);
-});
+);
 
 // DELETE /api/products/:id - Delete a product
 app.delete('/api/products/:id', authRequest, (req, res) => {
@@ -142,8 +178,20 @@ app.delete('/api/products/:id', authRequest, (req, res) => {
   res.status(204).end(); // No content response
 });
 
-// - Authentication
-// - Error handling
+// Middleware for handling 404 errors
+app.use((err, req, res, next) => {
+  console.error(err.stack); // Log for debugging
+  
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal Server Error';
+  
+  res.status(statusCode).json({ 
+    error: { 
+      message, 
+      status: statusCode 
+    } 
+  });
+});
 
 // Start the server
 app.listen(PORT, () => {
